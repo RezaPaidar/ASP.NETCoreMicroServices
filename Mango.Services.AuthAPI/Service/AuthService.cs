@@ -11,13 +11,34 @@ namespace Mango.Services.AuthAPI.Service
         private readonly AppDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
-        public AuthService(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AuthService(AppDbContext db,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IJwtTokenGenerator jwtTokenGenerator)
         {
             _db = db;
             _userManager = userManager;
             _roleManager = roleManager;
+            _jwtTokenGenerator = jwtTokenGenerator;
         }
+
+        public async Task<bool> AssignRole(string email, string roleName)
+        {
+            var user = _db.applicationUsers.FirstOrDefault(x => x.Email.ToLower() == email.ToLower());
+            if (user != null)
+            {
+                if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
+                {
+                    _roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
+                }
+                await _userManager.AddToRoleAsync(user, roleName);
+                return true;
+            }
+            return false;
+        }
+
         public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
         {
             var user = _db.applicationUsers
@@ -28,6 +49,8 @@ namespace Mango.Services.AuthAPI.Service
             {
                 return new LoginResponseDTO { User = null, Token = string.Empty };
             }
+
+            var token = _jwtTokenGenerator.GenerateToken(user);
 
             UserDTO userDto = new()
             {
@@ -40,7 +63,7 @@ namespace Mango.Services.AuthAPI.Service
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO
             {
                 User = userDto,
-                Token = string.Empty,
+                Token = token,
             };
 
             return loginResponseDTO;

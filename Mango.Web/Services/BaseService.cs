@@ -7,14 +7,16 @@ using Newtonsoft.Json;
 
 namespace Mango.Web.Services
 {
-    public class BaseService:IBaseService
+    public class BaseService : IBaseService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        public BaseService(IHttpClientFactory httpClientFactory)
+        private readonly ITokenProvider _tokenProvider;
+        public BaseService(IHttpClientFactory httpClientFactory, ITokenProvider tokenProvider)
         {
             _httpClientFactory = httpClientFactory;
+            _tokenProvider = tokenProvider;
         }
-        public async Task<ResponseDTO?> SendAsync(RequestDTO requestDto)
+        public async Task<ResponseDTO?> SendAsync(RequestDTO requestDto, bool withBearer = true)
         {
             try
             {
@@ -22,6 +24,13 @@ namespace Mango.Web.Services
                 HttpRequestMessage message = new();
                 message.Headers.Add("Accept", "application/json");
                 //token
+                if (withBearer)
+                {
+                    var token = _tokenProvider.GetToken();
+                    message.Headers.Add("Authorization", $"Bearer {token}");
+                }
+
+
                 message.RequestUri = new Uri(requestDto.Url);
                 if (requestDto.Data != null)
                 {

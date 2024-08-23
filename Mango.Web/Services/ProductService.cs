@@ -31,8 +31,8 @@ namespace Mango.Web.Services
                 Url = StaticDetails.ProductAPIBase + "/api/Product"
             });
         }
-
-        public async Task<ResponseDTO?> GetProductsByIdAsync(int id)
+        
+        public async Task<ResponseDTO?> GetProductByIdAsync(int id)
         {
             return await _baseService.SendAsync(new RequestDTO()
             {
@@ -70,9 +70,6 @@ namespace Mango.Web.Services
             });
         }
 
-        public Task<ResponseDTO?> GetProductByIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }

@@ -31,5 +31,5 @@ namespace Mango.Services.CouponAPI.Data
                 MinAmount = 40
             });
         }
-    }
+    } 
 }
